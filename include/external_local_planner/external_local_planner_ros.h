@@ -83,6 +83,8 @@ namespace external_local_planner {
 
       // publisher of global plan for visualisation
       ros::Publisher g_plan_pub_;
+      // publisher of local goal
+      ros::Publisher l_goal_pub_;
 
       // interface with an external local planner
       ros::Subscriber planner_sub_;

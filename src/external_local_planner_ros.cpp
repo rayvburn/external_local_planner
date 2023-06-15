@@ -38,6 +38,7 @@ namespace external_local_planner {
 
     ros::NodeHandle private_nh("~/" + name);
     g_plan_pub_ = private_nh.advertise<nav_msgs::Path>("global_plan", 1);
+    l_goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("local_goal", 1);
     tf_ = tf;
     costmap_ros_ = costmap_ros;
     costmap_ros_->getRobotPose(current_pose_);
@@ -120,6 +121,8 @@ namespace external_local_planner {
       return false;
     }
     ROS_DEBUG_NAMED("external_local_planner", "Received a transformed plan with %zu points.", transformed_plan.size());
+    // publish local goal
+    l_goal_pub_.publish(transformed_plan.back());
 
     // evaluate if the external command is valid or outdated
     bool cmd_valid = cmd_vel_apply_cnt_ <= EXT_CMD_MAX_USAGE_COUNT;
