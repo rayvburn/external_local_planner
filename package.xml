@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>external_local_planner</name>
+    <version>1.0.0</version>
+    <description>
+        An implementation of ROS Navigation Stack local planner plugin that passes externally computed velocity commands to the move_base framework.
+        This can be used as an interface for methods implemented not as Navigation plugin, e.g., written as separate nodes in Python.
+    </description>
+    <author email="chromedivizer@gmail.com">Jarosław Karwowski</author>
+    <maintainer email="chromedivizer@gmail.com">Jarosław Karwowski</maintainer>
+    <license>BSD</license>
+    <url>https://github.com/rayvburn/external_local_planner</url>
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <depend>base_local_planner</depend>
+    <depend>cmake_modules</depend>
+    <depend>costmap_2d</depend>
+    <depend>eigen</depend>
+    <depend>nav_core</depend>
+    <depend>nav_msgs</depend>
+    <depend>pluginlib</depend>
+    <depend>pcl_conversions</depend>
+    <depend>roscpp</depend>
+    <depend>tf2</depend>
+    <depend>tf2_ros</depend>
+
+    <export>
+        <nav_core plugin="${prefix}/blp_plugin.xml" />
+    </export>
+
+</package>

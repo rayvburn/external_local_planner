@@ -1,0 +1,8 @@
+<library path="lib/libexternal_local_planner">
+  <class name="external_local_planner/ExternalLocalPlannerROS" type="external_local_planner::ExternalLocalPlannerROS" base_class_type="nav_core::BaseLocalPlanner">
+    <description>
+      An implementation of ROS Navigation Stack local planner plugin that passes externally computed velocity commands to the move_base framework.
+      This can be used as an interface for methods implemented not as Navigation plugin, e.g., written as separate nodes in Python.
+    </description>
+  </class>
+</library>
