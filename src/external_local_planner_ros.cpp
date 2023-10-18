@@ -124,6 +124,7 @@ namespace external_local_planner {
     // publish local goal
     l_goal_pub_.publish(transformed_plan.back());
 
+    std::lock_guard<std::mutex> lock(ext_twist_mutex_);
     // evaluate if the external command is valid or outdated
     bool cmd_valid = cmd_vel_apply_cnt_ <= EXT_CMD_MAX_USAGE_COUNT;
 
