@@ -29,6 +29,11 @@ namespace external_local_planner {
     /// How many times externally received twist command can be applied ('timeout')
     static constexpr int EXT_CMD_MAX_USAGE_COUNT = 2;
 
+    enum Mode {
+      EXTERNAL_PLANNER = 0,
+      STOP_AND_ROTATE = 1
+    };
+
     public:
       /**
        * @brief  Constructor for ExternalLocalPlannerROS wrapper
@@ -70,6 +75,9 @@ namespace external_local_planner {
        */
       bool isGoalReached();
 
+      /// Stop and rotate controller uses this to validate commands
+      bool checkTrajectory(Eigen::Vector3f pos, Eigen::Vector3f vel, Eigen::Vector3f vel_samples);
+
       bool isInitialized() {
         return initialized_;
       }
@@ -96,9 +104,14 @@ namespace external_local_planner {
       bool setup_;
       geometry_msgs::PoseStamped current_pose_;
 
+      bool enable_stop_rotate_controller_;
       base_local_planner::LatchedStopRotateController latched_stop_rotate_controller_;
 
       bool initialized_;
+      /// The period at which the local planner is expected to run
+      double sim_period_;
+      /// Which mode was previously used during velocity command computation
+      enum Mode prev_mode_;
 
       base_local_planner::OdometryHelperRos odom_helper_;
       std::string odom_topic_;
