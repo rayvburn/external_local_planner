@@ -60,6 +60,13 @@ namespace external_local_planner {
       odom_helper_.setOdomTopic( odom_topic_ );
     }
 
+    base_local_planner::LocalPlannerLimits limits;
+    private_nh.param<double>("xy_goal_tolerance", limits.xy_goal_tolerance, 0.2);
+    private_nh.param<double>("yaw_goal_tolerance", limits.yaw_goal_tolerance, 0.2);
+    private_nh.param<double>("trans_stopped_vel", limits.trans_stopped_vel, 0.1);
+    private_nh.param<double>("theta_stopped_vel", limits.theta_stopped_vel, 0.1);
+    planner_util_.reconfigureCB(limits, false);
+
     initialized_ = true;
   }
   
