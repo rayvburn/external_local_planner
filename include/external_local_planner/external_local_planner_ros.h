@@ -85,6 +85,8 @@ namespace external_local_planner {
     private:
       void publishGlobalPlan(std::vector<geometry_msgs::PoseStamped>& path);
 
+      bool findLocalGoal(const std::vector<geometry_msgs::PoseStamped>& plan, geometry_msgs::PoseStamped& local_goal);
+
       void externalTwistCb(const geometry_msgs::TwistConstPtr& msg);
 
       tf2_ros::Buffer* tf_; ///< @brief Used for transforming point clouds
@@ -93,6 +95,9 @@ namespace external_local_planner {
       ros::Publisher g_plan_pub_;
       // publisher of local goal
       ros::Publisher l_goal_pub_;
+      /// How far a pose of the global plan needs to lie from the current pose to be be treated as a local goal;
+      /// Negative value automatically selects the last pose of the plan
+      double local_goal_distance_;
 
       // interface with an external local planner
       ros::Subscriber planner_sub_;

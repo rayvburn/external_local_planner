@@ -61,6 +61,7 @@ namespace external_local_planner {
       odom_helper_.setOdomTopic( odom_topic_ );
     }
 
+    private_nh.param<double>("local_goal_distance", local_goal_distance_, -1.0);
     private_nh.param<bool>("enable_stop_rotate_controller", enable_stop_rotate_controller_, false);
 
     base_local_planner::LocalPlannerLimits limits;
@@ -97,7 +98,7 @@ namespace external_local_planner {
     }
     initialized_ = true;
   }
-  
+
   bool ExternalLocalPlannerROS::setPlan(const std::vector<geometry_msgs::PoseStamped>& orig_global_plan) {
     if (! isInitialized()) {
       ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
@@ -168,6 +169,71 @@ namespace external_local_planner {
     cmd_vel_apply_cnt_ = 0;
   }
 
+  bool ExternalLocalPlannerROS::findLocalGoal(
+    const std::vector<geometry_msgs::PoseStamped>& plan,
+    geometry_msgs::PoseStamped& local_goal
+  ) {
+    if (plan.empty()) {
+      ROS_ERROR_NAMED("external_local_planner", "Plan is empty! Selecting the current pose as a local goal");
+      local_goal = current_pose_;
+      return false;
+    }
+
+    if (plan.size() == 1) {
+      ROS_INFO_NAMED("external_local_planner", "Plan has only 1 pose, using it as a local goal");
+      local_goal = plan.back();
+      return true;
+    }
+
+    // selecting a closer goal pose disabled
+    if (local_goal_distance_ < 0.0) {
+      local_goal = plan.back();
+      return true;
+    }
+
+    // helper function that computes squared distance between poses given by {x1, y1} and {x2, y2}
+    auto computeSqDist = [](double x1, double y1, double x2, double y2) {
+      double dist_x = x2 - x1;
+      double dist_y = y2 - y1;
+      double dist_sq = dist_x * dist_x + dist_y * dist_y;
+      return dist_sq;
+    };
+
+    // computes Euclidean distance between 2 points
+    auto computeDist = [computeSqDist](double x1, double y1, double x2, double y2) {
+      return std::sqrt(computeSqDist(x1, y1, x2, y2));
+    };
+
+    double dist_sum_along_path = 0.0;
+    for (
+      // NOTE: starting from the [1] instead of [0]
+      std::vector<geometry_msgs::PoseStamped>::const_iterator it = std::next(plan.begin());
+      it != plan.end();
+      ++it
+    ) {
+      // the iterator is always valid as we start from the second element
+      auto it_prev = std::prev(it);
+
+      // accumulate distances
+      double dist = computeDist(
+        it_prev->pose.position.x,
+        it_prev->pose.position.y,
+        it->pose.position.x,
+        it->pose.position.y
+      );
+      dist_sum_along_path += dist;
+      if (dist_sum_along_path < local_goal_distance_) {
+        // not far enough
+        continue;
+      }
+      local_goal = *it;
+      return true;
+    }
+    // plan is too short - choosing the last pose
+    local_goal = plan.back();
+    return true;
+  }
+
   bool ExternalLocalPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel) {
     // dispatches to either dwa sampling control or stop and rotate control, depending on whether we have been close enough to goal
     if ( ! costmap_ros_->getRobotPose(current_pose_)) {
@@ -186,8 +252,13 @@ namespace external_local_planner {
       return false;
     }
     ROS_DEBUG_NAMED("external_local_planner", "Received a transformed plan with %zu points.", transformed_plan.size());
-    // publish local goal
-    l_goal_pub_.publish(transformed_plan.back());
+    // select and publish local goal
+    geometry_msgs::PoseStamped goal_local;
+    if (!findLocalGoal(transformed_plan, goal_local)) {
+      ROS_ERROR("Could not select a local goal");
+      return false;
+    }
+    l_goal_pub_.publish(goal_local);
 
     /*
      * There can be 2 modes of operation:
