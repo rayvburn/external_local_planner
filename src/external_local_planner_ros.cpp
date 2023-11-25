@@ -167,6 +167,7 @@ namespace external_local_planner {
     std::lock_guard lock(ext_twist_mutex_);
     cmd_vel_ext_ = *msg;
     cmd_vel_apply_cnt_ = 0;
+    ROS_INFO_ONCE_NAMED("external_local_planner", "Received the first external twist command!");
   }
 
   bool ExternalLocalPlannerROS::findLocalGoal(
